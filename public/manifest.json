@@ -1,0 +1,16 @@
+{
+  "name": "Zion Omniverse",
+  "short_name": "Zion",
+  "description": "Sistema de Gestión Financiera de Élite",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#010101",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "/zion-logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
