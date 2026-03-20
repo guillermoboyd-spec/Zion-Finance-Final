@@ -1,154 +1,90 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell
+  PieChart, Pie, Cell, Legend,
 } from "recharts";
 import {
-  Cpu, Wallet, TrendingUp, Activity, ShieldCheck, Sun, Moon, 
-  Fingerprint, Trophy, Globe, Landmark, Zap, Target
+  LayoutDashboard, Wallet, TrendingUp, User as UserIcon,
+  LogOut, Plus, X, ShieldCheck, ChevronRight,
+  Target, Zap, Activity, Globe, Eye, EyeOff, Lock, Trophy, Trash2, Languages,
+  QrCode, Cpu, CreditCard, ArrowUpRight, ArrowDownRight, Sun, Moon, Download,
+  Fingerprint, Newspaper, DollarSign, Euro, PoundSterling, Landmark, CheckCircle2,
+  RefreshCw
 } from "lucide-react";
 
 /**
- * ZION OMNIVERSE v17.0 - RESTAURACIÓN TOTAL
- * El diseño original con los cálculos corregidos.
+ * ZION OMNIVERSE v17.0 - GOLD MASTER STORE EDITION
+ * VERSIÓN CORREGIDA: NÚMEROS VISIBLES (NEGRO SOBRE BLANCO)
  */
 
-export default function ZionPlatform() {
-  const [lang, setLang] = useState("ES");
-  const [isDarkMode, setIsDarkMode] = useState(true);
-  
-  // Estados de la calculadora
-  const [currentAge, setCurrentAge] = useState(30);
-  const [retirementAge, setRetirementAge] = useState(65);
-  const [monthlyContribution, setMonthlyContribution] = useState(500);
-  const [yieldRate, setYieldRate] = useState(8);
+type Language = "EN" | "ES" | "JP" | "ZH" | "FR" | "DE" | "AR" | "IT";
+type Currency = "USD" | "EUR" | "GBP" | "JPY" | "SAR";
 
-  const projection = useMemo(() => {
-    const years = retirementAge - currentAge;
-    if (years <= 0) return 0;
-    const r = yieldRate / 100 / 12;
-    const futureValue = monthlyContribution * ((Math.pow(1 + r, years * 12) - 1) / r);
-    return Math.round(futureValue);
-  }, [currentAge, retirementAge, monthlyContribution, yieldRate]);
+const TRANSLATIONS: Record<Language, any> = {
+  EN: {
+    access: "ACCESS", centralHub: "CENTRAL HUB", assetsVault: "VAULT", strategicOps: "STRATEGY", profileId: "PASSPORT", privacyControl: "PRIVACY", disconnect: "DISCONNECT", totalValue: "TOTAL NET ASSETS", goal: "GOAL", projection: "PROJECTION", cashflow: "CASHFLOW", calibration: "NODE CONFIGURATION", currentAge: "CURRENT AGE", targetAge: "TARGET AGE", allocation: "MONTHLY SAVING", mainTarget: "FINANCIAL GOAL", yield: "YIELD", infl: "INFLATION", trajectory: "WEALTH TRAJECTORY", appendCapital: "DEPLOY CAPITAL", assetLabel: "ASSET LABEL", valuationUsd: "VALUE", secureAsset: "COMMIT", targetMsg: "Protocol predicts financial sovereignty at age", withCapital: "with a total reserve of", yielding: "yielding a perpetual monthly stream of", legacyReport: "STRATEGIC INSIGHT", entityCal: "IDENTITY VERIFICATION", nodeMaster: "HOLDER NAME", nodeActive: "ZION SOVEREIGN IDENTITY ACTIVE", legal: "LEGAL & COMPLIANCE", disclaimer: "DISCLAIMER", privacy: "PRIVACY POLICY", support: "TECHNICAL SUPPORT", privacyMsg: "Zion Protocol ensures 100% data sovereignty. All calculations are local and encrypted.", disclaimerMsg: "Zion is a projection tool. Financial markets involve risk. No financial advice provided.", supportMsg: "Contact: support@zionfinance.io", securedBy: "SECURED BY ZION PROTOCOL", deleteSuccess: "Asset removed", healthScore: "PORTFOLIO HEALTH", marketLive: "LIVE MARKET DATA", serial: "SERIAL NO.", expiry: "SECURE UNTIL", news: "NEWS FEED", export: "EXPORT PDF", scan: "BIOMETRIC SCANNING...", auth: "IDENTITY AUTHORIZED", reset: "RESET NODE",
+  },
+  ES: {
+    access: "ACCEDER", centralHub: "PANEL CENTRAL", assetsVault: "BÓVEDA", strategicOps: "ESTRATEGIA", profileId: "PASAPORTE", privacyControl: "PRIVACIDAD", disconnect: "DESCONECTAR", totalValue: "ACTIVOS NETOS TOTALES", goal: "META", projection: "PROYECCIÓN", cashflow: "FLUJO CAJA", calibration: "CONFIGURACIÓN NODO", currentAge: "EDAD ACTUAL", targetAge: "EDAD RETIRO", allocation: "AHORRO MENSUAL", mainTarget: "META FINANCIERA", yield: "RENDIMIENTO", infl: "INFLACIÓN", trajectory: "TRAYECTORIA CAPITAL", appendCapital: "ANEXAR CAPITAL", assetLabel: "ETIQUETA ACTIVO", valuationUsd: "VALUACIÓN", secureAsset: "ASEGURAR", targetMsg: "El protocolo predice soberanía financiera a los", withCapital: "con una reserva total de", yielding: "generando un flujo mensual vitalicio de", legacyReport: "ANÁLISIS ESTRATÉGICO", entityCal: "VERIFICACIÓN DE IDENTIDAD", nodeMaster: "NOMBRE TITULAR", nodeActive: "IDENTIDAD SOBERANA ZION ACTIVA", legal: "LEGAL Y CUMPLIMIENTO", disclaimer: "AVISO LEGAL", privacy: "POLÍTICA DE PRIVACIDAD", support: "SOPORTE TÉCNICO", privacyMsg: "El Protocolo Zion garantiza soberanía total de datos. Todos los cálculos son locales y encriptados.", disclaimerMsg: "Zion es una herramienta de proyección. Los mercados financieros implican riesgo. No es asesoría financiera.", supportMsg: "Contacto: support@zionfinance.io", securedBy: "PROTEGIDO POR PROTOCOLO ZION", deleteSuccess: "Activo eliminado", healthScore: "SALUD DE PORTAFOLIO", marketLive: "MERCADOS EN VIVO", serial: "SERIE NO.", expiry: "SEGURO HASTA", news: "NOTICIAS", export: "EXPORTAR PDF", scan: "ESCANEANDO BIOMETRÍA...", auth: "IDENTIDAD AUTORIZADA", reset: "REINICIAR NODO",
+  },
+  JP: { access: "アクセス", centralHub: "ハブ", assetsVault: "金庫", strategicOps: "戦略", news: "ニュース", profileId: "パスポート", totalValue: "総資産", currentAge: "年齢", targetAge: "目標" },
+  ZH: { access: "进入", centralHub: "枢纽", assetsVault: "保险库", strategicOps: "战略", news: "全球情报", profileId: "护照", totalValue: "总净资产", currentAge: "年龄", targetAge: "目标" },
+  FR: { access: "ACCÉDER", centralHub: "CENTRE", assetsVault: "COFFRE", strategicOps: "STRATÉGIE", news: "NOUVELLES", profileId: "PASSEPORT", totalValue: "TOTAL", currentAge: "ÂGE", targetAge: "CIBLE" },
+  DE: { access: "ZUGANG", centralHub: "ZENTRALE", assetsVault: "TRESOR", strategicOps: "STRATEGIE", news: "NEWS", profileId: "PASS", totalValue: "WERT", currentAge: "ALTER", targetAge: "ZIELALTER" },
+  AR: { access: "الدخول", centralHub: "المركز", assetsVault: "الخزنة", strategicOps: "استراتيجية", news: "أخبار", profileId: "جواز", totalValue: "إجمالي", currentAge: "العمر", targetAge: "الهدف" },
+  IT: { access: "ACCEDI", centralHub: "HUB", assetsVault: "CAVEAU", strategicOps: "STRATEGIA", news: "NOTIZIE", profileId: "PASSAPORTO", totalValue: "TOTALE", currentAge: "ETÀ", targetAge: "TARGET" },
+};
 
-  const chartData = [
-    { name: "ENE", v: 4000 }, { name: "FEB", v: 5500 }, { name: "MAR", v: 4800 },
-    { name: "ABR", v: 7000 }, { name: "MAY", v: 6500 }, { name: "JUN", v: 9000 }
-  ];
+const NEWS_FEED = [
+  { id: 1, title: "Federal Reserve hints at interest rate stability through Q4.", time: "2m ago" },
+  { id: 2, title: "Gold hits all-time high amid global liquidity expansion.", time: "15m ago" },
+  { id: 3, title: "Bitcoin institutional adoption reaches new milestones.", time: "44m ago" },
+  { id: 4, title: "Zion Protocol v17.0 Gold Master deployment successful.", time: "1h ago" }
+];
 
+const CURRENCY_SYMBOLS: Record<Currency, string> = {
+  USD: "$", EUR: "€", GBP: "£", JPY: "¥", SAR: "﷼"
+};
+
+const ASSET_COLORS = ["#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#1e40af", "#1d4ed8"];
+
+// --- COMPONENTE DE ENTRADA CORREGIDO ---
+function UniversalInput({ label, value, onChange, isMoney = false, isText = false, unit = "", currencySymbol = "$" }) {
   return (
-    <div className={`min-h-screen ${isDarkMode ? "bg-black text-white" : "bg-slate-50 text-slate-900"} font-sans transition-all duration-500`}>
-      {/* NAVEGACIÓN ORIGINAL */}
-      <nav className="border-b border-blue-500/20 px-8 py-6 flex justify-between items-center backdrop-blur-xl sticky top-0 z-50">
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-            <Cpu className="text-white w-7 h-7" />
-          </div>
-          <div>
-            <h1 className="font-black tracking-tighter text-2xl">ZION <span className="text-blue-500">OMNIVERSE</span></h1>
-            <p className="text-[10px] font-mono text-blue-400 font-bold">V17.0 GOLD MASTER EDITION</p>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-6">
-          <div className="flex space-x-3 text-[10px] font-black">
-            <button onClick={() => setLang("ES")} className={lang === "ES" ? "text-blue-500" : "text-slate-500"}>ES</button>
-            <button onClick={() => setLang("EN")} className={lang === "EN" ? "text-blue-500" : "text-slate-500"}>EN</button>
-            <button onClick={() => setLang("JP")} className={lang === "JP" ? "text-blue-500" : "text-slate-500"}>JP</button>
-          </div>
-          <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 bg-blue-500/10 rounded-xl text-blue-400">
-            {isDarkMode ? <Sun /> : <Moon />}
-          </button>
-          <button className="bg-blue-600 px-6 py-3 rounded-xl text-xs font-black flex items-center space-x-2 shadow-lg shadow-blue-600/20">
-            <Fingerprint className="w-4 h-4" />
-            <span>ACCESO</span>
-          </button>
-        </div>
-      </nav>
-
-      <main className="p-10 max-w-[1600px] mx-auto space-y-10">
-        {/* TARJETAS DE VALORES */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {[
-            { label: "VALOR TOTAL", val: "$428,590.22", icon: Wallet, col: "text-blue-500" },
-            { label: "RENDIMIENTO", val: "+12.4%", icon: TrendingUp, col: "text-emerald-500" },
-            { label: "NODOS ACTIVOS", val: "1,024", icon: Activity, col: "text-blue-400" },
-            { label: "SEGURIDAD", val: "TITANIUM", icon: ShieldCheck, col: "text-purple-500" }
-          ].map((item, i) => (
-            <div key={i} className="bg-slate-900/40 border border-blue-500/10 p-8 rounded-[30px] backdrop-blur-md">
-              <item.icon className={`${item.col} w-8 h-8 mb-4`} />
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">{item.label}</p>
-              <h3 className="text-3xl font-black font-mono">{item.val}</h3>
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* GRÁFICO PROFESIONAL */}
-          <div className="lg:col-span-2 bg-slate-900/20 border border-blue-500/10 rounded-[40px] p-10 backdrop-blur-sm">
-            <div className="flex justify-between items-center mb-10">
-              <h2 className="text-2xl font-black tracking-tighter uppercase">ANÁLISIS DE MERCADO</h2>
-              <div className="bg-black/40 p-1 rounded-lg border border-blue-500/10">
-                <button className="px-4 py-1 text-[10px] font-black bg-blue-600 rounded">1M</button>
-              </div>
-            </div>
-            <div className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="colorV" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <Area type="monotone" dataKey="v" stroke="#3b82f6" strokeWidth={4} fill="url(#colorV)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* CALCULADORA CON TU ESTILO */}
-          <div className="bg-blue-600 rounded-[40px] p-10 text-white shadow-2xl relative overflow-hidden">
-            <div className="relative z-10 space-y-6">
-              <div className="flex items-center space-x-4 mb-4">
-                <Trophy className="w-10 h-10" />
-                <h2 className="text-2xl font-black uppercase tracking-tighter leading-none">PLAN DE<br/>JUBILACIÓN</h2>
-              </div>
-
-              <div className="space-y-4">
-                {[
-                  { label: "EDAD ACTUAL", val: currentAge, set: setCurrentAge, u: "AÑOS" },
-                  { label: "EDAD OBJETIVO", val: retirementAge, set: setRetirementAge, u: "AÑOS" },
-                  { label: "AHORRO MENSUAL", val: monthlyContribution, set: setMonthlyContribution, u: "$" },
-                  { label: "RENDIMIENTO (%)", val: yieldRate, set: setYieldRate, u: "%" }
-                ].map((f, i) => (
-                  <div key={i}>
-                    <label className="text-[10px] font-black opacity-70 tracking-widest uppercase mb-2 block">{f.label}</label>
-                    <input 
-                      type="number" 
-                      value={f.val} 
-                      onChange={(e) => f.set(Number(e.target.value))}
-                      className="w-full bg-white text-black font-black text-xl p-4 rounded-2xl outline-none border-2 border-transparent focus:border-black/20 shadow-inner"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <div className="pt-8 border-t border-white/20">
-                <p className="text-[10px] font-black opacity-70 tracking-widest mb-1">PROYECCIÓN FINAL</p>
-                <h3 className="text-5xl font-black font-mono">${projection.toLocaleString()}</h3>
-              </div>
-            </div>
-            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-          </div>
-        </div>
-      </main>
-
-      <footer className="mt-20 border-t border-blue-500/10 p-10 text-center opacity-40">
-        <p className="text-[10px] font-mono tracking-[0.4em]">ZION OMNIVERSE © 2026 - MASTER STORE EDITION</p>
-      </footer>
+    <div style={{ marginBottom: "1.5rem" }}>
+      <label style={{ display: "block", fontSize: "0.7rem", fontWeight: 900, color: "#4b5563", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>
+        {label}
+      </label>
+      <input
+        type={isText ? "text" : "number"}
+        value={value}
+        onChange={(e) => onChange(isText ? e.target.value : parseFloat(e.target.value) || 0)}
+        style={{
+          width: "100%",
+          padding: "1.2rem",
+          borderRadius: "16px",
+          border: "2px solid #2563eb33",
+          backgroundColor: "white", // FONDO BLANCO
+          color: "black",          // LETRAS NEGRAS
+          fontSize: "1.2rem",
+          fontWeight: "800",
+          outline: "none"
+        }}
+      />
     </div>
   );
 }
+
+function KPIpro({ label, value, sub, icon, progress }: any) {
+  return (
+    <div style={{ background: 'rgba(37,99,235,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '2.5rem', borderRadius: '30px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+        <div style={{ color: '#2563eb' }}>{icon}</div>
+      </div>
+      <p style={{ fontSize: '0.75rem', fontWeight: 950, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '0.5rem' }}>{label}</p>
+      <h3 style={{ fontSize: '2.4rem', fontWeight: 950, margin: 0, letterSpacing: '-0.04em' }}>{value}</h3>
+      <p style={{ fontSize: '0.8rem', fontWeight: 800, color: '#2563eb', marginTop: '0.5rem' }}>{sub}</p>
+      {progress !== undefined && (
+        <div style={{ width: '100%', height: '6px', background: 'rgba(37,99,235,0.1)', borderRadius: '
