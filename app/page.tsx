@@ -209,3 +209,96 @@ export default function ZionDiamond() {
     </div>
   );
 }
+<div className="content">
+            <div style={{ padding: '3rem 4rem' }}>
+              <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+                <div>
+                  <p style={{ opacity: 0.5, fontWeight: 800 }}>{t.totalValue}</p>
+                  <h2 style={{ fontSize: '3.5rem', fontWeight: 950 }}>${totalVault.toLocaleString()}</h2>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  {['EN', 'ES'].map(l => (
+                    <button key={l} onClick={() => setLang(l)} style={{ background: lang === l ? '#2563eb' : '#222', border: 'none', color: '#fff', padding: '5px 15px', borderRadius: '8px', cursor: 'pointer', fontWeight: 800 }}>{l}</button>
+                  ))}
+                </div>
+              </header>
+
+              {activeTab === 'dashboard' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+                    <KPIpro label={t.goal} value={`${goalProgress.toFixed(1)}%`} progress={goalProgress} icon={<Target color="#2563eb" />} />
+                    <KPIpro label={t.projection} value={`$${Math.round(finalBalance/1000)}k`} sub={`Edad: ${retirementAge}`} icon={<TrendingUp color="#2563eb" />} />
+                    <KPIpro label={t.healthScore} value="98" sub="SISTEMA ACTIVO" icon={<ShieldCheck color="#22c55e" />} />
+                  </div>
+
+                  <div style={{ background: '#111', padding: '2rem', borderRadius: '30px', height: '400px' }}>
+                    <h3 style={{ marginBottom: '2rem', fontWeight: 900 }}>{t.trajectory}</h3>
+                    <ResponsiveContainer width="100%" height="80%">
+                      <AreaChart data={projection}>
+                        <XAxis dataKey="age" stroke="#444" />
+                        <Tooltip contentStyle={{ background: '#000', border: 'none', borderRadius: '10px' }} />
+                        <Area type="monotone" dataKey="balance" stroke="#2563eb" fill="rgba(37,99,235,0.2)" strokeWidth={4} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'vault' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+                  <div className="card-sovereign" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <h3 style={{ fontWeight: 900 }}>{t.appendCapital}</h3>
+                    <UniversalInput label="NOMBRE" value={newName} onChange={setNewName} isText />
+                    <UniversalInput label="VALOR ($)" value={newValue} onChange={setNewValue} />
+                    <button className="btn-gold" onClick={() => {
+                        if (newName && newValue > 0) {
+                          setAssets([...assets, { id: Date.now(), name: newName.toUpperCase(), value: newValue, color: ASSET_COLORS[assets.length % ASSET_COLORS.length] }]);
+                          setNewName(""); setNewValue(0);
+                        }
+                      }}>
+                      {t.secureAsset}
+                    </button>
+                    <div style={{ marginTop: '2rem' }}>
+                      {assets.map(a => (
+                        <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', borderBottom: '1px solid #222' }}>
+                          <span style={{ fontWeight: 800 }}>{a.name}</span>
+                          <div>
+                            <span style={{ marginRight: '15px' }}>${a.value.toLocaleString()}</span>
+                            <Trash2 size={18} color="#ef4444" style={{ cursor: 'pointer' }} onClick={() => setAssets(assets.filter(x => x.id !== a.id))} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="card-sovereign" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie data={assets} innerRadius={80} outerRadius={120} dataKey="value" paddingAngle={5}>
+                          {assets.map((entry, index) => <Cell key={index} fill={entry.color} />)}
+                        </Pie>
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'strategy' && (
+                <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+                  <Trophy size={80} color="#2563eb" style={{ marginBottom: '1rem' }} />
+                  <h2 style={{ fontSize: '2rem', fontWeight: 900 }}>ESTRATEGIA Zion</h2>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '3rem', textAlign: 'left' }}>
+                    <UniversalInput label={t.currentAge} value={currentAge} onChange={setCurrentAge} />
+                    <UniversalInput label={t.targetAge} value={retirementAge} onChange={setRetirementAge} />
+                    <UniversalInput label={t.allocation} value={monthlyContribution} onChange={setMonthlyContribution} />
+                    <UniversalInput label="META FINAL ($)" value={financialGoal} onChange={setFinancialGoal} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
