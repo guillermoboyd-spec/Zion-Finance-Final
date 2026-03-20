@@ -1,132 +1,153 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Cpu, Trophy, Wallet, TrendingUp, Activity, ShieldCheck, Sun, Moon, Fingerprint } from "lucide-react";
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell
+} from "recharts";
+import {
+  Cpu, Wallet, TrendingUp, Activity, ShieldCheck, Sun, Moon, 
+  Fingerprint, Trophy, Globe, Landmark, Zap, Target
+} from "lucide-react";
 
 /**
- * ZION MASTER - VERSIÓN CORREGIDA
- * Los números se verán NEGROS dentro de los cuadros BLANCOS.
+ * ZION OMNIVERSE v17.0 - RESTAURACIÓN TOTAL
+ * El diseño original con los cálculos corregidos.
  */
 
-export default function ZionFinal() {
+export default function ZionPlatform() {
+  const [lang, setLang] = useState("ES");
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  
+  // Estados de la calculadora
   const [currentAge, setCurrentAge] = useState(30);
-  const [targetAge, setTargetAge] = useState(65);
-  const [monthlySaving, setMonthlySaving] = useState(500);
+  const [retirementAge, setRetirementAge] = useState(65);
+  const [monthlyContribution, setMonthlyContribution] = useState(500);
   const [yieldRate, setYieldRate] = useState(8);
 
   const projection = useMemo(() => {
-    const years = targetAge - currentAge;
+    const years = retirementAge - currentAge;
     if (years <= 0) return 0;
     const r = yieldRate / 100 / 12;
-    const futureValue = monthlySaving * ((Math.pow(1 + r, years * 12) - 1) / r);
+    const futureValue = monthlyContribution * ((Math.pow(1 + r, years * 12) - 1) / r);
     return Math.round(futureValue);
-  }, [currentAge, targetAge, monthlySaving, yieldRate]);
+  }, [currentAge, retirementAge, monthlyContribution, yieldRate]);
+
+  const chartData = [
+    { name: "ENE", v: 4000 }, { name: "FEB", v: 5500 }, { name: "MAR", v: 4800 },
+    { name: "ABR", v: 7000 }, { name: "MAY", v: 6500 }, { name: "JUN", v: 9000 }
+  ];
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans p-4 md:p-10">
-      {/* CABECERA */}
-      <nav className="flex justify-between items-center mb-10 border-b border-blue-500/20 pb-6">
-        <div className="flex items-center space-x-3">
-          <Cpu className="text-blue-500 w-10 h-10 animate-pulse" />
-          <h1 className="text-2xl font-black tracking-tighter">NODE.<span className="text-blue-500">ZION</span></h1>
-        </div>
+    <div className={`min-h-screen ${isDarkMode ? "bg-black text-white" : "bg-slate-50 text-slate-900"} font-sans transition-all duration-500`}>
+      {/* NAVEGACIÓN ORIGINAL */}
+      <nav className="border-b border-blue-500/20 px-8 py-6 flex justify-between items-center backdrop-blur-xl sticky top-0 z-50">
         <div className="flex items-center space-x-4">
-           <div className="text-[10px] font-bold text-emerald-500 flex items-center bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-             <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-ping" />
-             LIVE_SYNC
-           </div>
-           <Fingerprint className="text-blue-500 w-6 h-6" />
+          <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+            <Cpu className="text-white w-7 h-7" />
+          </div>
+          <div>
+            <h1 className="font-black tracking-tighter text-2xl">ZION <span className="text-blue-500">OMNIVERSE</span></h1>
+            <p className="text-[10px] font-mono text-blue-400 font-bold">V17.0 GOLD MASTER EDITION</p>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-6">
+          <div className="flex space-x-3 text-[10px] font-black">
+            <button onClick={() => setLang("ES")} className={lang === "ES" ? "text-blue-500" : "text-slate-500"}>ES</button>
+            <button onClick={() => setLang("EN")} className={lang === "EN" ? "text-blue-500" : "text-slate-500"}>EN</button>
+            <button onClick={() => setLang("JP")} className={lang === "JP" ? "text-blue-500" : "text-slate-500"}>JP</button>
+          </div>
+          <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 bg-blue-500/10 rounded-xl text-blue-400">
+            {isDarkMode ? <Sun /> : <Moon />}
+          </button>
+          <button className="bg-blue-600 px-6 py-3 rounded-xl text-xs font-black flex items-center space-x-2 shadow-lg shadow-blue-600/20">
+            <Fingerprint className="w-4 h-4" />
+            <span>ACCESO</span>
+          </button>
         </div>
       </nav>
 
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
-        
-        {/* LADO IZQUIERDO: CONFIGURACIÓN */}
-        <div className="lg:col-span-5 bg-slate-900/50 border border-blue-500/20 p-8 rounded-[35px] backdrop-blur-md">
-          <div className="flex items-center space-x-3 mb-8">
-            <Activity className="text-blue-500 w-6 h-6" />
-            <h2 className="text-xl font-black uppercase tracking-widest text-blue-400">Node Configuration</h2>
-          </div>
-
-          <div className="space-y-6">
-            {/* CUADRO 1 */}
-            <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Current Age</label>
-              <input 
-                type="number" 
-                value={currentAge} 
-                onChange={(e) => setCurrentAge(Number(e.target.value))}
-                className="w-full bg-white text-black font-black text-2xl p-4 rounded-xl border-2 border-blue-500/30 focus:border-blue-500 outline-none transition-all"
-              />
+      <main className="p-10 max-w-[1600px] mx-auto space-y-10">
+        {/* TARJETAS DE VALORES */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {[
+            { label: "VALOR TOTAL", val: "$428,590.22", icon: Wallet, col: "text-blue-500" },
+            { label: "RENDIMIENTO", val: "+12.4%", icon: TrendingUp, col: "text-emerald-500" },
+            { label: "NODOS ACTIVOS", val: "1,024", icon: Activity, col: "text-blue-400" },
+            { label: "SEGURIDAD", val: "TITANIUM", icon: ShieldCheck, col: "text-purple-500" }
+          ].map((item, i) => (
+            <div key={i} className="bg-slate-900/40 border border-blue-500/10 p-8 rounded-[30px] backdrop-blur-md">
+              <item.icon className={`${item.col} w-8 h-8 mb-4`} />
+              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">{item.label}</p>
+              <h3 className="text-3xl font-black font-mono">{item.val}</h3>
             </div>
-
-            {/* CUADRO 2 */}
-            <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Target Age</label>
-              <input 
-                type="number" 
-                value={targetAge} 
-                onChange={(e) => setTargetAge(Number(e.target.value))}
-                className="w-full bg-white text-black font-black text-2xl p-4 rounded-xl border-2 border-blue-500/30 focus:border-blue-500 outline-none transition-all"
-              />
-            </div>
-
-            {/* CUADRO 3 */}
-            <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Monthly Saving ($)</label>
-              <input 
-                type="number" 
-                value={monthlySaving} 
-                onChange={(e) => setMonthlySaving(Number(e.target.value))}
-                className="w-full bg-white text-black font-black text-2xl p-4 rounded-xl border-2 border-blue-500/30 focus:border-blue-500 outline-none transition-all"
-              />
-            </div>
-
-            {/* CUADRO 4 */}
-            <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Expected Yield (%)</label>
-              <input 
-                type="number" 
-                value={yieldRate} 
-                onChange={(e) => setYieldRate(Number(e.target.value))}
-                className="w-full bg-white text-black font-black text-2xl p-4 rounded-xl border-2 border-blue-500/30 focus:border-blue-500 outline-none transition-all"
-              />
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* LADO DERECHO: RESULTADOS */}
-        <div className="lg:col-span-7 space-y-8">
-          <div className="bg-blue-600 p-10 rounded-[40px] shadow-[0_0_50px_rgba(37,99,235,0.3)] relative overflow-hidden">
-             <Trophy className="text-white/20 w-32 h-32 absolute -right-5 -bottom-5" />
-             <p className="text-xs font-black tracking-[0.3em] uppercase opacity-80 mb-2">Financial Goal Projection</p>
-             <h3 className="text-6xl md:text-7xl font-black font-mono tracking-tighter">
-               ${projection.toLocaleString()}
-             </h3>
-             <div className="mt-8 flex items-center space-x-2 bg-black/20 w-fit px-4 py-2 rounded-full border border-white/10">
-               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-               <span className="text-[10px] font-bold tracking-widest uppercase">Secured by Zion Protocol</span>
-             </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          {/* GRÁFICO PROFESIONAL */}
+          <div className="lg:col-span-2 bg-slate-900/20 border border-blue-500/10 rounded-[40px] p-10 backdrop-blur-sm">
+            <div className="flex justify-between items-center mb-10">
+              <h2 className="text-2xl font-black tracking-tighter uppercase">ANÁLISIS DE MERCADO</h2>
+              <div className="bg-black/40 p-1 rounded-lg border border-blue-500/10">
+                <button className="px-4 py-1 text-[10px] font-black bg-blue-600 rounded">1M</button>
+              </div>
+            </div>
+            <div className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorV" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <Area type="monotone" dataKey="v" stroke="#3b82f6" strokeWidth={4} fill="url(#colorV)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
-            <div className="bg-slate-900 border border-blue-500/10 p-6 rounded-3xl">
-               <TrendingUp className="text-blue-500 mb-4" />
-               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Monthly Growth</p>
-               <h4 className="text-xl font-black">+12.4%</h4>
+          {/* CALCULADORA CON TU ESTILO */}
+          <div className="bg-blue-600 rounded-[40px] p-10 text-white shadow-2xl relative overflow-hidden">
+            <div className="relative z-10 space-y-6">
+              <div className="flex items-center space-x-4 mb-4">
+                <Trophy className="w-10 h-10" />
+                <h2 className="text-2xl font-black uppercase tracking-tighter leading-none">PLAN DE<br/>JUBILACIÓN</h2>
+              </div>
+
+              <div className="space-y-4">
+                {[
+                  { label: "EDAD ACTUAL", val: currentAge, set: setCurrentAge, u: "AÑOS" },
+                  { label: "EDAD OBJETIVO", val: retirementAge, set: setRetirementAge, u: "AÑOS" },
+                  { label: "AHORRO MENSUAL", val: monthlyContribution, set: setMonthlyContribution, u: "$" },
+                  { label: "RENDIMIENTO (%)", val: yieldRate, set: setYieldRate, u: "%" }
+                ].map((f, i) => (
+                  <div key={i}>
+                    <label className="text-[10px] font-black opacity-70 tracking-widest uppercase mb-2 block">{f.label}</label>
+                    <input 
+                      type="number" 
+                      value={f.val} 
+                      onChange={(e) => f.set(Number(e.target.value))}
+                      className="w-full bg-white text-black font-black text-xl p-4 rounded-2xl outline-none border-2 border-transparent focus:border-black/20 shadow-inner"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-8 border-t border-white/20">
+                <p className="text-[10px] font-black opacity-70 tracking-widest mb-1">PROYECCIÓN FINAL</p>
+                <h3 className="text-5xl font-black font-mono">${projection.toLocaleString()}</h3>
+              </div>
             </div>
-            <div className="bg-slate-900 border border-blue-500/10 p-6 rounded-3xl">
-               <Wallet className="text-purple-500 mb-4" />
-               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Active Nodes</p>
-               <h4 className="text-xl font-black">1,024</h4>
-            </div>
+            <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
           </div>
         </div>
+      </main>
 
-      </div>
-      
-      <footer className="mt-20 text-center opacity-30 text-[10px] font-mono tracking-[0.5em] uppercase">
-        Zion Omniverse © 2026 - Master Store Edition
+      <footer className="mt-20 border-t border-blue-500/10 p-10 text-center opacity-40">
+        <p className="text-[10px] font-mono tracking-[0.4em]">ZION OMNIVERSE © 2026 - MASTER STORE EDITION</p>
       </footer>
     </div>
   );
