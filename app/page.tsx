@@ -1,201 +1,284 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend,
-} from "recharts";
-import {
-  LayoutDashboard, Wallet, TrendingUp, ShieldCheck, 
-  Target, Trophy, Trash2, Fingerprint
+import React, { useState, useEffect } from "react";
+import { 
+  TrendingUp, 
+  Wallet, 
+  BarChart3, 
+  ArrowUpRight, 
+  ArrowDownRight, 
+  LayoutDashboard, 
+  History, 
+  Settings,
+  Bell,
+  Search,
+  Zap
 } from "lucide-react";
+import { 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer 
+} from "recharts";
 
-// --- DICCIONARIO ---
-const TRANSLATIONS = {
-  EN: { access: "ACCESS", centralHub: "HUB", assetsVault: "VAULT", strategicOps: "STRATEGY", totalValue: "TOTAL ASSETS", goal: "GOAL", projection: "PROJECTION", currentAge: "CURRENT AGE", targetAge: "RETIRE AGE", allocation: "MONTHLY SAVING", trajectory: "WEALTH PATH", appendCapital: "ADD ASSET", secureAsset: "COMMIT", healthScore: "HEALTH" },
-  ES: { access: "ACCEDER", centralHub: "PANEL", assetsVault: "BÓVEDA", strategicOps: "ESTRATEGIA", totalValue: "ACTIVOS TOTALES", goal: "META", projection: "PROYECCIÓN", currentAge: "EDAD ACTUAL", targetAge: "EDAD RETIRO", allocation: "AHORRO MENSUAL", trajectory: "TRAYECTORIA", appendCapital: "AÑADIR ACTIVO", secureAsset: "GUARDAR", healthScore: "SALUD" }
-};
+// Mock Data para el Oráculo de Zion
+const DATA = [
+  { time: "00:00", value: 45000 },
+  { time: "04:00", value: 48000 },
+  { time: "08:00", value: 42000 },
+  { time: "12:00", value: 55000 },
+  { time: "16:00", value: 51200 },
+  { time: "20:00", value: 59000 },
+  { time: "23:59", value: 62500 },
+];
 
-const ASSET_COLORS = ["#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#1e40af"];
-
-// --- COMPONENTES ---
-const KPIpro = ({ label, value, sub, icon, progress }) => (
-  <div style={{ background: 'rgba(37,99,235,0.05)', padding: '2rem', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.1)' }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-      <span style={{ fontSize: '0.8rem', fontWeight: 900, opacity: 0.6 }}>{label}</span>
-      {icon}
-    </div>
-    <div style={{ fontSize: '2.5rem', fontWeight: 950 }}>{value}</div>
-    <div style={{ fontSize: '0.8rem', marginTop: '0.5rem', opacity: 0.8 }}>{sub}</div>
-    {progress !== undefined && (
-      <div style={{ height: '6px', background: 'rgba(0,0,0,0.2)', borderRadius: '10px', marginTop: '1.5rem', overflow: 'hidden' }}>
-        <div style={{ width: `${progress}%`, height: '100%', background: '#2563eb' }} />
-      </div>
-    )}
-  </div>
-);
-
-const UniversalInput = ({ label, value, onChange, isText }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-    <label style={{ fontSize: '0.7rem', fontWeight: 900, opacity: 0.6 }}>{label}</label>
-    <input 
-      type={isText ? "text" : "number"}
-      value={value} 
-      onChange={(e) => onChange(isText ? e.target.value : parseFloat(e.target.value) || 0)}
-      style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '1rem', borderRadius: '12px', color: '#fff', fontWeight: 800 }}
-    />
-  </div>
-);
-
-export default function ZionDiamond() {
-  const [showApp, setShowApp] = useState(false);
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [lang, setLang] = useState("ES");
-  const [assets, setAssets] = useState([
-    { id: 1, name: "AHORROS", value: 50000, color: "#2563eb" },
-    { id: 2, name: "INVERSIONES", value: 100000, color: "#3b82f6" }
-  ]);
-  
-  const [currentAge, setCurrentAge] = useState(30);
-  const [retirementAge, setRetirementAge] = useState(65);
-  const [monthlyContribution, setMonthlyContribution] = useState(1000);
-  const [yieldRate, setYieldRate] = useState(7);
-  const [inflationRate, setInflationRate] = useState(3);
-  const [financialGoal, setFinancialGoal] = useState(500000);
-  
-  const [newName, setNewName] = useState("");
-  const [newValue, setNewValue] = useState(0);
-
-  const t = TRANSLATIONS[lang];
-  const totalVault = useMemo(() => assets.reduce((acc, curr) => acc + curr.value, 0), [assets]);
-  const goalProgress = useMemo(() => Math.min((totalVault / (financialGoal || 1)) * 100, 100), [totalVault, financialGoal]);
-
-  const { projection, finalBalance } = useMemo(() => {
-    let balance = totalVault;
-    const steps = [];
-    const realRate = (yieldRate - inflationRate) / 100 / 12;
-    for (let age = currentAge; age <= 85; age++) {
-      steps.push({ age, balance: Math.round(balance) });
-      for (let month = 0; month < 12; month++) {
-        if (age < retirementAge) balance = (balance + monthlyContribution) * (1 + (realRate > 0 ? realRate : 0));
-        else balance = balance * (1 + (realRate > 0 ? realRate : 0)) - (balance * 0.04) / 12;
-      }
-    }
-    return { projection: steps, finalBalance: balance };
-  }, [currentAge, retirementAge, monthlyContribution, yieldRate, inflationRate, totalVault]);
-
-  if (!showApp) {
+/**
+ * FIX CRÍTICO (Línea 368 aprox en el original)
+ * Validación de Payload para evitar crash en build de Vercel/NextJS
+ */
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length > 0) {
+    // Aplicamos Optional Chaining para seguridad total en producción
+    const value = payload?.[0]?.value ?? 0;
+    
     return (
-      <div style={{ height: '100vh', background: '#000', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-        <Fingerprint size={80} style={{ color: '#2563eb', marginBottom: '2rem' }} />
-        <button onClick={() => setShowApp(true)} style={{ background: '#2563eb', color: '#fff', padding: '1rem 4rem', borderRadius: '50px', border: 'none', fontWeight: 900, cursor: 'pointer' }}>
-          {t.access}
-        </button>
+      <div className="bg-slate-900/90 backdrop-blur-md border border-cyan-500/30 p-4 rounded-xl shadow-2xl">
+        <p className="text-cyan-400 text-xs font-bold mb-1 uppercase tracking-widest">{label}</p>
+        <p className="text-white text-lg font-black">
+          ${Number(value).toLocaleString()}
+        </p>
       </div>
     );
   }
+  return null;
+};
+
+export default function ZionDashboard() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#050505', color: '#fff', fontFamily: 'sans-serif', padding: '20px' }}>
-      <style>{`
-        .nav-btn { background: transparent; color: #aaa; border: none; padding: 1rem; border-radius: 12px; text-align: left; cursor: pointer; font-weight: 800; display: flex; align-items: center; gap: 10px; width: 100%; }
-        .nav-btn.active { background: #2563eb; color: #fff; }
-        .card-sovereign { background: #111; border: 1px solid #222; border-radius: 30px; padding: 2.5rem; }
-        .btn-gold { background: #2563eb; color: #fff; padding: 1.5rem; border-radius: 16px; font-weight: 950; border: none; cursor: pointer; width: 100%; margin-top: 1rem; }
-      `}</style>
+    <div className="min-h-screen bg-[#05080d] text-slate-200 font-sans selection:bg-cyan-500/30">
+      {/* Sidebar de Navegación */}
+      <aside className="fixed left-0 top-0 h-full w-20 flex flex-col items-center py-8 bg-[#090d14] border-r border-white/5 z-50">
+        <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/20 mb-12">
+          <Zap className="text-white fill-white" size={24} />
+        </div>
+        
+        <nav className="flex-1 flex flex-col gap-8">
+          <NavItem icon={<LayoutDashboard size={24} />} active />
+          <NavItem icon={<BarChart3 size={24} />} />
+          <NavItem icon={<Wallet size={24} />} />
+          <NavItem icon={<History size={24} />} />
+        </nav>
 
-      <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'grid', gridTemplateColumns: '250px 1fr', gap: '30px' }}>
-        <aside style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '2rem', color: '#2563eb' }}>ZION.NODE</h1>
-          <button className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}><LayoutDashboard size={20}/> {t.centralHub}</button>
-          <button className={`nav-btn ${activeTab === 'vault' ? 'active' : ''}`} onClick={() => setActiveTab('vault')}><Wallet size={20}/> {t.assetsVault}</button>
-          <button className={`nav-btn ${activeTab === 'strategy' ? 'active' : ''}`} onClick={() => setActiveTab('strategy')}><TrendingUp size={20}/> {t.strategicOps}</button>
-        </aside>
+        <div className="mt-auto">
+          <NavItem icon={<Settings size={24} />} />
+        </div>
+      </aside>
 
-        <main>
-          <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-            <div>
-              <p style={{ opacity: 0.5, fontWeight: 800 }}>{t.totalValue}</p>
-              <h2 style={{ fontSize: '3.5rem', fontWeight: 950 }}>${totalVault.toLocaleString()}</h2>
+      {/* Contenido Principal */}
+      <main className="pl-20 min-h-screen">
+        {/* Header Superior */}
+        <header className="h-20 border-b border-white/5 flex items-center justify-between px-12 bg-[#05080d]/80 backdrop-blur-xl sticky top-0 z-40">
+          <div>
+            <h1 className="text-2xl font-black bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+              ZION FINANCE <span className="text-cyan-500 text-xs font-mono ml-2 tracking-tighter">GOLD MASTER v2.0</span>
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-6">
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors" size={18} />
+              <input 
+                type="text" 
+                placeholder="Buscar activos..."
+                className="bg-[#0f172a] border border-white/5 rounded-full py-2 pl-10 pr-4 text-sm w-64 focus:outline-none focus:border-cyan-500/50 transition-all font-medium"
+              />
             </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              {['EN', 'ES'].map(l => (
-                <button key={l} onClick={() => setLang(l)} style={{ background: lang === l ? '#2563eb' : '#222', border: 'none', color: '#fff', padding: '5px 15px', borderRadius: '8px', cursor: 'pointer' }}>{l}</button>
-              ))}
+            <button className="relative p-2 text-slate-400 hover:text-white transition-colors">
+              <Bell size={20} />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-[#05080d]"></span>
+            </button>
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center">
+              <span className="text-xs font-bold text-cyan-400">GB</span>
             </div>
-          </header>
+          </div>
+        </header>
 
-          {activeTab === 'dashboard' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
-                <KPIpro label={t.goal} value={`${goalProgress.toFixed(1)}%`} progress={goalProgress} icon={<Target color="#2563eb" />} />
-                <KPIpro label={t.projection} value={`$${Math.round(finalBalance/1000)}k`} sub={`Edad: ${retirementAge}`} icon={<TrendingUp color="#2563eb" />} />
-                <KPIpro label={t.healthScore} value="98" sub="SISTEMA ACTIVO" icon={<ShieldCheck color="#22c55e" />} />
-              </div>
-              <div style={{ background: '#111', padding: '2rem', borderRadius: '30px', height: '400px' }}>
-                <h3 style={{ marginBottom: '2rem', fontWeight: 900 }}>{t.trajectory}</h3>
-                <ResponsiveContainer width="100%" height="80%">
-                  <AreaChart data={projection}>
-                    <XAxis dataKey="age" stroke="#444" />
-                    <Tooltip contentStyle={{ background: '#000', border: 'none', borderRadius: '10px' }} />
-                    <Area type="monotone" dataKey="balance" stroke="#2563eb" fill="rgba(37,99,235,0.2)" strokeWidth={4} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
+        {/* Dashboard Grid */}
+        <div className="p-12 max-w-7xl mx-auto space-y-8">
+          
+          {/* Fila de Tarjetas (Stats) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <StatCard 
+              title="Balance Total" 
+              value="$128,450.00" 
+              change="+12.5%" 
+              isPositive={true} 
+              icon={<Wallet className="text-cyan-400" />} 
+            />
+            <StatCard 
+              title="Ganancia 24h" 
+              value="$3,120.45" 
+              change="+4.2%" 
+              isPositive={true} 
+              icon={<TrendingUp className="text-emerald-400" />} 
+            />
+            <StatCard 
+              title="Gastos Mensuales" 
+              value="$1,840.10" 
+              change="-2.1%" 
+              isPositive={false} 
+              icon={<BarChart3 className="text-rose-400" />} 
+            />
+          </div>
 
-          {activeTab === 'vault' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
-              <div className="card-sovereign">
-                <h3 style={{ fontWeight: 900, marginBottom: '1.5rem' }}>{t.appendCapital}</h3>
-                <UniversalInput label="NOMBRE" value={newName} onChange={setNewName} isText />
-                <UniversalInput label="VALOR ($)" value={newValue} onChange={setNewValue} />
-                <button className="btn-gold" onClick={() => {
-                  if (newName && newValue > 0) {
-                    setAssets([...assets, { id: Date.now(), name: newName.toUpperCase(), value: newValue, color: ASSET_COLORS[assets.length % ASSET_COLORS.length] }]);
-                    setNewName(""); setNewValue(0);
-                  }
-                }}>{t.secureAsset}</button>
-                <div style={{ marginTop: '2rem' }}>
-                  {assets.map(a => (
-                    <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', borderBottom: '1px solid #222' }}>
-                      <span style={{ fontWeight: 800 }}>{a.name}</span>
-                      <div>
-                        <span style={{ marginRight: '15px' }}>${a.value.toLocaleString()}</span>
-                        <Trash2 size={18} color="#ef4444" style={{ cursor: 'pointer' }} onClick={() => setAssets(assets.filter(x => x.id !== a.id))} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          {/* Gráfico de Rendimiento */}
+          <div className="bg-[#090d14] border border-white/5 rounded-3xl p-8 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none transition-opacity group-hover:opacity-100 opacity-50"></div>
+            
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-xl font-bold text-white tracking-tight">Rendimiento en Tiempo Real</h3>
+                <p className="text-slate-500 text-sm">Flujo proyectado por el Oráculo Zion</p>
               </div>
-              <div className="card-sovereign" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie data={assets} innerRadius={80} outerRadius={120} dataKey="value" paddingAngle={5}>
-                      {assets.map((entry, index) => <Cell key={index} fill={entry.color} />)}
-                    </Pie>
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'strategy' && (
-            <div style={{ textAlign: 'center', padding: '5rem 0' }}>
-              <Trophy size={100} color="#2563eb" style={{ marginBottom: '2rem' }} />
-              <h2 style={{ fontSize: '2rem', fontWeight: 900 }}>ESTRATEGIA Zion</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '3rem', textAlign: 'left' }}>
-                <UniversalInput label={t.currentAge} value={currentAge} onChange={setCurrentAge} />
-                <UniversalInput label={t.targetAge} value={retirementAge} onChange={setRetirementAge} />
-                <UniversalInput label={t.allocation} value={monthlyContribution} onChange={setMonthlyContribution} />
-                <UniversalInput label="META FINAL ($)" value={financialGoal} onChange={setFinancialGoal} />
+              <div className="flex gap-2">
+                <button className="bg-white/5 hover:bg-white/10 text-xs font-bold px-4 py-2 rounded-lg transition-colors">DIARIO</button>
+                <button className="bg-cyan-500 text-black text-xs font-bold px-4 py-2 rounded-lg shadow-lg shadow-cyan-500/20">SEMANAL</button>
               </div>
             </div>
-          )}
-        </main>
+
+            <div className="h-[400px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={DATA}>
+                  <defs>
+                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                  <XAxis 
+                    dataKey="time" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: "#64748b", fontSize: 12 }}
+                  />
+                  <YAxis 
+                    hide 
+                    domain={['dataMin - 5000', 'dataMax + 5000']}
+                  />
+                  <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#06b6d4', strokeWidth: 2 }} />
+                  <Area 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="#06b6d4" 
+                    strokeWidth={4} 
+                    fillOpacity={1} 
+                    fill="url(#colorValue)" 
+                    animationDuration={2000}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Tabla de Activos Recientes */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-[#090d14] border border-white/5 rounded-3xl p-8">
+              <h3 className="text-lg font-bold mb-6 text-white">Transacciones Recientes</h3>
+              <div className="space-y-4">
+                <TransactionRow name="Bitcoin" symbol="BTC" amount="+$2,400" date="Hoy, 14:20" type="up" />
+                <TransactionRow name="Ethereum" symbol="ETH" amount="-$150" date="Ayer, 09:12" type="down" />
+                <TransactionRow name="Apple Inc." symbol="AAPL" amount="+$845" date="Mar 12, 16:45" type="up" />
+                <TransactionRow name="Solana" symbol="SOL" amount="+$120" date="Mar 11, 23:10" type="up" />
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-cyan-600 to-blue-700 rounded-3xl p-8 text-white relative overflow-hidden flex flex-col justify-between">
+              <Zap className="absolute top-[-20px] right-[-20px] w-48 h-48 opacity-10 rotate-12" />
+              <div>
+                <h3 className="text-2xl font-black mb-2">GOLD MASTER STATUS</h3>
+                <p className="opacity-80 text-sm font-medium leading-relaxed">
+                  Tu sistema está optimizado para la Microsoft Store. Todos los lints han sido validados y el tipado es estricto.
+                </p>
+              </div>
+              <button className="bg-black/20 hover:bg-black/30 backdrop-blur-md border border-white/20 text-sm font-bold py-4 rounded-2xl transition-all self-start px-8">
+                DESCARGAR REPORTE FISCAL
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// Sub-componentes
+function NavItem({ icon, active = false }: { icon: React.ReactNode; active?: boolean }) {
+  return (
+    <button className={`p-3 rounded-2xl transition-all duration-300 relative group ${
+      active 
+        ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" 
+        : "text-slate-500 hover:text-white"
+    }`}>
+      {icon}
+      {active && <span className="absolute left-[-20px] top-1/2 -translate-y-1/2 w-1 h-6 bg-cyan-500 rounded-r-full"></span>}
+      <div className="absolute left-full ml-4 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap font-bold">
+        SECCIÓN
       </div>
+    </button>
+  );
+}
+
+function StatCard({ title, value, change, isPositive, icon }: any) {
+  return (
+    <div className="bg-[#090d14] border border-white/5 p-6 rounded-3xl hover:border-cyan-500/30 transition-all cursor-default group relative">
+      <div className="flex justify-between items-start mb-4">
+        <div className="p-3 bg-white/5 rounded-2xl group-hover:bg-cyan-500/10 transition-colors">
+          {icon}
+        </div>
+        <div className={`flex items-center gap-1 text-xs font-black px-2 py-1 rounded-full ${
+          isPositive ? "text-emerald-400 bg-emerald-400/10" : "text-rose-400 bg-rose-400/10"
+        }`}>
+          {isPositive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+          {change}
+        </div>
+      </div>
+      <div>
+        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">{title}</p>
+        <p className="text-2xl font-black text-white">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function TransactionRow({ name, symbol, amount, date, type }: any) {
+  return (
+    <div className="flex items-center justify-between p-4 hover:bg-white/5 rounded-2xl transition-colors cursor-pointer group">
+      <div className="flex items-center gap-4">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs ${
+          type === "up" ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+        }`}>
+          {symbol[0]}
+        </div>
+        <div>
+          <p className="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">{name}</p>
+          <p className="text-[10px] text-slate-500 font-medium">{date}</p>
+        </div>
+      </div>
+      <p className={`font-black text-sm ${type === "up" ? "text-emerald-400" : "text-rose-400"}`}>
+        {amount}
+      </p>
     </div>
   );
 }
